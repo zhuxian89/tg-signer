@@ -95,8 +95,19 @@ def get_openai_client(
 ) -> Optional["AsyncOpenAI"]:
     from openai import AsyncOpenAI, OpenAIError
 
+    # 某些第三方 API 提供商会拦截 OpenAI SDK 默认的 User-Agent (OpenAI/Python x.x.x)
+    # 通过 default_headers 覆盖默认的 User-Agent 来避免被拦截
+    default_headers = kwargs.pop("default_headers", {})
+    if "User-Agent" not in default_headers:
+        default_headers["User-Agent"] = "Mozilla/5.0"
+
     try:
-        return AsyncOpenAI(api_key=api_key, base_url=base_url, **kwargs)
+        return AsyncOpenAI(
+            api_key=api_key,
+            base_url=base_url,
+            default_headers=default_headers,
+            **kwargs,
+        )
     except OpenAIError:
         return None
 
